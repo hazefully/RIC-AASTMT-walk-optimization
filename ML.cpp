@@ -50,7 +50,7 @@ using namespace libcmaes;
 using namespace std;
 const double PI = 3.14159265359;
 const char BASH[] = "./start_all.sh";
-const int lambda = 180;
+const int lambda = 160;
 double sigma = 0.5;
 const int dim = 23;
 int MAITER = 200;
@@ -320,7 +320,7 @@ public:
 
 		vector<double> anss;
 		ifstream ifs;
-		for (int j = 0; j < 9; j++)
+		for (int j = 0; j < 8; j++)
 			for (int i = 0; i < 20; i++) {
 				double x;
 				string path = "outputrc" + toString(j) + "_" + toString(i)
