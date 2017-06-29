@@ -66,11 +66,16 @@ class OptimizationBehaviorWalkForward: public NaoBehavior {
 	double COST_OF_FALL;
 	double START_POSITION_X[5];
 	double START_POSITION_Y[5];
+
 	double DIS[30];
 	double spiralAngle;
 	bool startSet[30];
 	double times[30];
 	double moveTypes[30];
+	VecPosition targets[30];
+	VecPosition startt[30];
+	VecPosition ends[30];
+	bool targetSet[30];
 	bool standing;
 	bool startCalc;
 	double expectedPerTarget;
@@ -88,7 +93,6 @@ class OptimizationBehaviorWalkForward: public NaoBehavior {
 	double weights[8];
 	args spiralDirection;
 	int currentTarget;
-	VecPosition startt;
 
 
 	int oldTarget;
