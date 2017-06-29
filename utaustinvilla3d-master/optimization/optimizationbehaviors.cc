@@ -235,7 +235,7 @@ OptimizationBehaviorWalkForward::OptimizationBehaviorWalkForward(
 //	START_POSITION_Y[3] = -HALF_FIELD_Y + 3;
 //	START_POSITION_X[4] = -HALF_FIELD_X + 3;
 //	START_POSITION_Y[4] = 0;
-	COST_OF_FALL = 4;
+	COST_OF_FALL = 5;
 	maxP = VecPosition(-50, -50, -50);
 	// Use ground truth localization for behavior
 	worldModel->setUseGroundTruthDataForLocalization(true);
@@ -261,6 +261,8 @@ void OptimizationBehaviorWalkForward::init() {
 	for (int i = 0; i < 30; i++) {
 		DIS[i] = 0.0;
 		startSet[i] = false;
+		targetSet[i] = false;
+
 	}
 	times[0] = 10.0;
 	moveTypes[0] = 0;
@@ -338,7 +340,6 @@ void OptimizationBehaviorWalkForward::init() {
 	randomIsSetTime = currentTime - 0.5;
 	double x, y, z;
 	beam(x, y, z);
-	startt = VecPosition(x, y, 0);
 	string msg = "(playMode BeforeKickOff)";
 	setMonMessage(msg);
 }
@@ -517,7 +518,7 @@ double OptimizationBehaviorWalkForward::fitnessDiagonal(VecPosition start) {
 double OptimizationBehaviorWalkForward::fitnessTurn(double startAngle,
 		VecPosition start) {
 	double ang = worldModel->getMyAngDegGroundTruth();
-	if (fabs(ang - startAngle) >= 5)
+	if (fabs(ang - startAngle) >= 70)
 		return 1;
 	else
 		return 0;
@@ -526,6 +527,8 @@ double OptimizationBehaviorWalkForward::fitnessTurn(double startAngle,
 SkillType OptimizationBehaviorWalkForward::weave(double moveStartTime,
 		double timePerWeave) {
 	double currentTime = worldModel->getTime();
+	VecPosition me = worldModel->getMyPositionGroundTruth();
+
 	currentTime -= startTime;
 	int t = currentTime - moveStartTime;
 	if (t - flipTime >= timePerWeave) {
@@ -540,6 +543,8 @@ SkillType OptimizationBehaviorWalkForward::weave(double moveStartTime,
 SkillType OptimizationBehaviorWalkForward::randomMove(double moveStartTime,
 		double timePerMove) {
 	double currentTime = worldModel->getTime();
+	VecPosition me = worldModel->getMyPositionGroundTruth();
+
 	currentTime -= startTime;
 	double t = currentTime - moveStartTime;
 	static VecPosition curTar = VecPosition(-me.getX(), -me.getY(), me.getZ());
@@ -561,10 +566,14 @@ SkillType OptimizationBehaviorWalkForward::randomMove(double moveStartTime,
 SkillType OptimizationBehaviorWalkForward::performMoves() {
 	double currentTime = worldModel->getTime();
 	currentTime -= startTime;
-
+	VecPosition me = worldModel->getMyPositionGroundTruth();
 	if (currentTime <= 10.0) {
 		times[0] = 10.0;
 		moveTypes[0] = 0;
+		if (!targetSet[0]) {
+			targets[0] = VecPosition(me.getX() + 20,  me.getY(), me.getZ());
+			targetSet[0] = 1;
+		}
 		return walkFront(1.0);
 	} else if (currentTime <= 11.0) {
 		times[1] = 11.0;
@@ -573,6 +582,10 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 19.0) {
 		times[2] = 19.0;
 		moveTypes[2] = 0;
+		if (!targetSet[2]) {
+			targets[2] = VecPosition(me.getX() - 20,  me.getY(), me.getZ());
+			targetSet[2] = 1;
+		}
 		return walkBackwardsTurn(1.0);
 	} else if (currentTime <= 20.0) {
 		times[3] = 20.0;
@@ -581,6 +594,10 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 22.0) {
 		times[4] = 22.0;
 		moveTypes[4] = 0;
+		if (!targetSet[4]) {
+			targets[4] = VecPosition(me.getX() - 20,  me.getY(), me.getZ());
+			targetSet[4] = 1;
+		}
 		return walkBackwards();
 	} else if (currentTime <= 23.0) {
 		times[5] = 23.0;
@@ -589,10 +606,18 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 30.0) {
 		times[6] = 30.0;
 		moveTypes[6] = 4;
+		if (!targetSet[6]) {
+			targets[6] = VecPosition(me.getX(),  me.getY()-20, me.getZ());
+			targetSet[6] = 1;
+		}
 		return walkRightLat();
 	} else if (currentTime <= 40.0) {
 		times[7] = 40.0;
 		moveTypes[7] = 0;
+		if (!targetSet[7]) {
+			targets[7] = VecPosition(me.getX(),  me.getY()+20, me.getZ());
+			targetSet[7] = 1;
+		}
 		return walkRight(1.0);
 	} else if (currentTime <= 41.0) {
 		times[8] = 41.0;
@@ -601,10 +626,18 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 45.0) {
 		times[9] = 45.0;
 		moveTypes[9] = 4;
+		if (!targetSet[9]) {
+			targets[9] = VecPosition(me.getX(),  me.getY()+20, me.getZ());
+			targetSet[9] = 1;
+		}
 		return walkLeftLat();
 	} else if (currentTime <= 50.0) {
 		times[10] = 50.0;
 		moveTypes[10] = 0;
+		if (!targetSet[0]) {
+			targets[10] = VecPosition(me.getX() - 20,  me.getY(), me.getZ());
+			targetSet[10] = 1;
+		}
 		return walkBackwardsTurn(20.0);
 	} else if (currentTime <= 51.0) {
 		times[11] = 51.0;
@@ -629,14 +662,26 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 78.0) {
 		times[16] = 78.0;
 		moveTypes[16] = 0;
+		if (!targetSet[16]) {
+			targets[16] = VecPosition(me.getX() - 20,  me.getY(), me.getZ());
+			targetSet[16] = 1;
+		}
 		return walkBackwardsTurn(1.0);
 	} else if (currentTime <= 88.0) {
 		times[17] = 88.0;
 		moveTypes[17] = 2;
+		if (!targetSet[17]) {
+			targets[17] = VecPosition(me.getX() + 10,  me.getY()-10, me.getZ());
+			targetSet[17] = 1;
+		}
 		return walk45up(1.0);
 	} else if (currentTime <= 98.0) {
 		times[18] = 98.0;
 		moveTypes[18] = 2;
+		if (!targetSet[18]) {
+			targets[18] = VecPosition(me.getX() - 20,  me.getY() + 20, me.getZ());
+			targetSet[18] = 1;
+		}
 		return walk45down(1.0);
 	} else if (currentTime <= 99.0) {
 		times[19] = 88.0;
@@ -645,6 +690,10 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 109.0) {
 		times[20] = 109.0;
 		moveTypes[20] = 0;
+		if (!targetSet[20]) {
+			targets[20] = VecPosition(me.getX() + 20,  me.getY(), me.getZ());
+			targetSet[20] = 1;
+		}
 		return weave(99.0, 1.0);
 	} else if (currentTime <= 110.0) {
 		times[21] = 110.0;
@@ -654,6 +703,10 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	} else if (currentTime <= 120.0) {
 		times[22] = 120.0;
 		moveTypes[22] = 0;
+		if (!targetSet[22]) {
+			targets[22] = VecPosition(me.getX() + 20,  me.getY(), me.getZ());
+			targetSet[22] = 1;
+		}
 		return weave(110.0, 3.0);
 	} else if (currentTime <= 121.0) {
 		times[23] = 121.0;
@@ -815,8 +868,6 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 	}
 	double angle = 0;
 	VecPosition me = worldModel->getMyPositionGroundTruth();
-	me.setZ(0);
-	startt.setZ(0);
 	if (worldModel->isFallen() && !hasFallen) {
 		hasFallen = true;
 		falls++;
@@ -829,23 +880,24 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 
 		if (currentTime - startTime <= times[phase]) {
 			if (!startSet[phase]) {
-				startt = me;
+				startt[phase] = me;
 				angle = worldModel->getMyAngDegGroundTruth();
 				startSet[phase] = 1;
 				startCalc = false;
 			}
 			if (moveTypes[phase] == 0) {
-				DIS[phase] = fitnessDirect(startt);
+				DIS[phase] = fitnessDirect(startt[phase]);
 			} else if (moveTypes[phase] == 1) {
-				DIS[phase] = fitnessCircle(startt);
+				DIS[phase] = fitnessCircle(startt[phase]);
 			} else if (moveTypes[phase] == 2) {
-				DIS[phase] = fitnessDiagonal(startt);
+				DIS[phase] = fitnessDiagonal(startt[phase]);
 			} else if (moveTypes[phase] == 3) {
-				DIS[phase] += fitnessTurn(angle, startt);
+				DIS[phase] += fitnessTurn(angle, startt[phase]);
 			} else if (moveTypes[phase] == 4)
-				DIS[phase] = fitnessLat(startt);
+				DIS[phase] = fitnessLat(startt[phase]);
 			else if (moveTypes[phase] == 5)
-				DIS[phase] += fitnessStop(startt);
+				DIS[phase] += fitnessStop(startt[phase]);
+			ends[phase] = me;
 			break;
 		}
 	}
@@ -894,19 +946,32 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 //				fit += dist * 0.8;
 //			}
 	if (currentTime - targetStartTime > 153.0) {
+//		cout<<falls<<endl;
+//		for(int phase  = 0; phase < 30; phase++)
+//			cout<<moveTypes[phase]<<" "<<phase<<" "<<DIS[phase]<<endl;
 		double fit = 0;
 		fit += (falls * COST_OF_FALL * -1);
 		if (run < 4) {
 			bool x = false;
 			for (int phase = 0; phase < 30; phase++) {
 				if (moveTypes[phase] == 5)
+				{
+//					cout<<5<<" "<<(DIS[phase] > 0)* -3<<endl;
 					fit += (DIS[phase] > 0) * -3;
+				}
 				else if (moveTypes[phase] != 3) {
 					if (DIS[phase] <= 0.1)
 						x = true;
+//					cout<<moveTypes[phase]<<" "<<DIS[phase]<<endl;
+					if(targetSet[phase] == true){
+//						cout<<startt[phase]<<" "<<ends[phase]<<" "<<targets[phase]<<endl;
+						if(startt[phase].getDistanceTo(targets[phase]) < ends[phase].getDistanceTo(targets[phase]))
+							fit -= 7;
+					}
 					fit += DIS[phase];
 				} else {
-					fit += 1.5 * (DIS[phase] > 0);
+//					cout<<"turn"<<" "<<DIS[phase]<<endl;
+					fit += 1.5 * (DIS[phase] > 0) - 1.5 * (DIS[phase] == 0);
 				}
 			}
 			fit -= x * 2;
@@ -1117,4 +1182,3 @@ bool OptimizationBehaviorStand::checkBeam() {
 	beamChecked = true;
 	return true;
 }
-
