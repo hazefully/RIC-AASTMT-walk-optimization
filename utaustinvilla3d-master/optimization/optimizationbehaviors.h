@@ -66,9 +66,11 @@ class OptimizationBehaviorWalkForward: public NaoBehavior {
 	double COST_OF_FALL;
 	double START_POSITION_X[5];
 	double START_POSITION_Y[5];
-	double DIS[12];
+	double DIS[30];
 	double spiralAngle;
-	bool startSet[12];
+	bool startSet[30];
+	double times[30];
+	double moveTypes[30];
 	bool standing;
 	bool startCalc;
 	double expectedPerTarget;
@@ -80,17 +82,23 @@ class OptimizationBehaviorWalkForward: public NaoBehavior {
 	double targetStartTime;
 	double randomIsSetTime;
 	VecPosition randomTarget;
-	int flip;
+	bool flip;
+	double flipTime;
 	VecPosition maxP;
 	double weights[8];
 	args spiralDirection;
 	int currentTarget;
 	VecPosition startt;
+
+
 	int oldTarget;
 	void init();
 	void populateMovements();
 	double fitnessSpiral(VecPosition start);
 	double fitnessCircle(VecPosition start);
+	SkillType performMoves();
+	SkillType weave(double moveStartTime, double timePerWeave);
+	SkillType randomMove(double moveStartTime, double timePerMove);
 	double fitnessDiagonal(VecPosition start);
 	double fitnessTurn(double startAngle, VecPosition start);
 	double fitnessDirect(VecPosition start);
