@@ -52,8 +52,8 @@ const double PI = 3.14159265359;
 const char BASH[] = "./start_all.sh";
 const int lambda = 180;
 double sigma = 0.5;
-const int dim = 17;
-int MAITER = 350;
+const int dim = 23;
+int MAITER = 200;
 ofstream ofs;
 
 #define SET(a)                memset( a, -1,    sizeof a )
@@ -96,8 +96,10 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 			//equality done
 			utwalk_max_normal_com_error, utwalk_max_acceptable_com_error,
 			utwalk_fwd_offset, utwalk_fwd_offset_factor,
-			utwalk_swing_ankle_offset;
-//			, utwalk_pid_tilt, utwalk_pid_roll;
+			utwalk_swing_ankle_offset, utwalk_pid_tilt, utwalk_pid_roll,
+			utwalk_toe_amplitude, utwalk_toe_phase_offset,
+			utwalk_ankle_const_offset, utwalk_ankle_amplitude,
+			utwalk_ankle_phase_offset, utwalk_toe_const_offset;
 //			utwalk_pid_com_x, utwalk_pid_com_y, utwalk_pid_com_z,
 //			utwalk_pid_arm_x, utwalk_pid_arm_y;
 
@@ -120,8 +122,16 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 	utwalk_fwd_offset = rad2deg(params[14]);
 	utwalk_fwd_offset_factor = params[15];
 	utwalk_swing_ankle_offset = params[16];
-//	utwalk_pid_tilt = params[17];
-//	utwalk_pid_roll = params[18];
+	//type4
+	utwalk_toe_const_offset = params[17];
+	utwalk_toe_amplitude = params[18];
+	utwalk_toe_phase_offset = params[19];
+	utwalk_ankle_const_offset = params[20];
+	utwalk_ankle_amplitude = params[21];
+	utwalk_ankle_phase_offset = params[22];
+
+//	utwalk_pid_tilt = params[23];
+//	utwalk_pid_roll = params[24];
 //	utwalk_pid_com_x = params[19];
 //	utwalk_pid_com_y = params[20];
 //	utwalk_pid_com_z = params[21];
@@ -189,12 +199,40 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 	h = "utwalk_swing_ankle_offset\t";
 	h += toString(utwalk_swing_ankle_offset);
 	ret.pb(h);
-/*	h = "utwalk_pid_tilt\t";
-	h += toString(utwalk_pid_tilt);
+//	h = "utwalk_pid_tilt\t";
+//	h += toString(utwalk_pid_tilt);
+//	ret.pb(h);
+//	h = "utwalk_pid_roll\t";
+//	h += toString(utwalk_pid_roll);
+//	ret.pb(h);
+//	h = "utwalk_pid_roll\t";
+//	h += toString(utwalk_pid_roll);
+//	ret.pb(h);
+
+	h = "utwalk_toe_const_offset\t";
+	h += toString(utwalk_toe_const_offset);
 	ret.pb(h);
-	h = "utwalk_pid_roll\t";
-	h += toString(utwalk_pid_roll);
-	ret.pb(h);*/
+
+	h = "utwalk_toe_amplitude\t";
+	h += toString(utwalk_toe_amplitude);
+	ret.pb(h);
+
+	h = "utwalk_toe_phase_offset\t";
+	h += toString(utwalk_toe_phase_offset);
+	ret.pb(h);
+
+	h = "utwalk_ankle_const_offset\t";
+	h += toString(utwalk_ankle_const_offset);
+	ret.pb(h);
+
+	h = "utwalk_ankle_amplitude\t";
+	h += toString(utwalk_ankle_amplitude);
+	ret.pb(h);
+
+	h = "utwalk_ankle_phase_offset\t";
+	h += toString(utwalk_ankle_phase_offset);
+	ret.pb(h);
+
 //	h = "utwalk_pid_com_x\t";
 //	h += toString(utwalk_pid_com_x);
 //	ret.pb(h);
@@ -205,7 +243,7 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 //	h += toString(utwalk_pid_com_z);
 //	ret.pb(h);
 	ifstream f;
-	f.open("allo.txt");
+	f.open("allo4.txt");
 	string s;
 	while (getline(f, s)) {
 		ret.pb(s);
@@ -354,7 +392,8 @@ public:
 };
 int main(int argc, char *argv[]) {
 	std::vector<double> x0(dim);
-	if(argc < 3)
+
+	if (argc < 3)
 		return -1;
 	sigma = atof(argv[2]);
 	MAITER = atoi(argv[1]);
@@ -401,6 +440,13 @@ int main(int argc, char *argv[]) {
 	x0[14] = 2.5 * PI / 180.0;
 	x0[15] = 0.5;
 	x0[16] = -0.087266463;
+	//type4
+	x0[17] = 0.018836427341286186;
+	x0[18] = -0.3033274567908883;
+	x0[19] = -0.028719513936251818;
+	x0[20] = -0.023659361728239663;
+	x0[21] = 0.08590805524680685;
+	x0[22] = -0.11237480724789313;
 //	x0[17] = 0.15;
 //	x0[18] = 0.2;
 //	x0[19] = 1.0;
@@ -467,6 +513,21 @@ int main(int argc, char *argv[]) {
 	lbounds[16] = -1;
 	ubounds[16] = 1;
 
+	//type4
+	lbounds[17] = -0.2;
+	ubounds[17] = 0.2;
+	lbounds[18] = -0.5;
+	ubounds[18] = 0.5;
+
+	lbounds[19] = -0.2;
+	ubounds[19] = 0.2;
+	lbounds[20] = -0.2;
+	ubounds[20] = 0.2;
+	lbounds[21] = -0.2;
+	ubounds[21] = 0.2;
+	lbounds[22] = -0.2;
+	ubounds[22] = 0.2;
+
 	/* SINGLE ITERATION TEST
 	 * //	CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(getFitness,cmaparams, select_time);
 	 */
@@ -512,7 +573,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "optimization took " << (double) (end - start) / 1000
 			<< " seconds\n";
 
-	cout<< cmasols.run_status()<<endl;
+	cout << cmasols.run_status() << endl;
 	return 0;
 
 }
