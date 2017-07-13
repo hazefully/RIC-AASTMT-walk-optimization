@@ -52,8 +52,8 @@ const double PI = 3.14159265359;
 const char BASH[] = "./start_all.sh";
 const int lambda = 160;
 double sigma = 0.5;
-const int dim = 23;
-int MAITER = 200;
+const int dim = 30;
+int MAITER = 350;
 ofstream ofs;
 
 #define SET(a)                memset( a, -1,    sizeof a )
@@ -99,9 +99,9 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 			utwalk_swing_ankle_offset, utwalk_pid_tilt, utwalk_pid_roll,
 			utwalk_toe_amplitude, utwalk_toe_phase_offset,
 			utwalk_ankle_const_offset, utwalk_ankle_amplitude,
-			utwalk_ankle_phase_offset, utwalk_toe_const_offset;
-//			utwalk_pid_com_x, utwalk_pid_com_y, utwalk_pid_com_z,
-//			utwalk_pid_arm_x, utwalk_pid_arm_y;
+			utwalk_ankle_phase_offset, utwalk_toe_const_offset,
+			utwalk_pid_com_x, utwalk_pid_com_y, utwalk_pid_com_z,
+			utwalk_pid_arm_x, utwalk_pid_arm_y;
 
 	utwalk_max_step_size_angle = params[0];
 	utwalk_max_step_size_x = rad2deg(params[1]);
@@ -130,11 +130,13 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 	utwalk_ankle_amplitude = params[21];
 	utwalk_ankle_phase_offset = params[22];
 
-//	utwalk_pid_tilt = params[23];
-//	utwalk_pid_roll = params[24];
-//	utwalk_pid_com_x = params[19];
-//	utwalk_pid_com_y = params[20];
-//	utwalk_pid_com_z = params[21];
+	utwalk_pid_tilt = params[23];
+	utwalk_pid_roll = params[24];
+	utwalk_pid_com_x = params[25];
+	utwalk_pid_com_y = params[26];
+	utwalk_pid_com_z = params[27];
+	utwalk_pid_arm_x = params[28];
+	utwalk_pid_arm_y = params[29];
 	//calculations
 
 	double utwalk_fraction_in_air = abs(1 - utwalk_fraction_on_ground);
@@ -199,15 +201,12 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 	h = "utwalk_swing_ankle_offset\t";
 	h += toString(utwalk_swing_ankle_offset);
 	ret.pb(h);
-//	h = "utwalk_pid_tilt\t";
-//	h += toString(utwalk_pid_tilt);
-//	ret.pb(h);
-//	h = "utwalk_pid_roll\t";
-//	h += toString(utwalk_pid_roll);
-//	ret.pb(h);
-//	h = "utwalk_pid_roll\t";
-//	h += toString(utwalk_pid_roll);
-//	ret.pb(h);
+	h = "utwalk_pid_tilt\t";
+	h += toString(utwalk_pid_tilt);
+	ret.pb(h);
+	h = "utwalk_pid_roll\t";
+	h += toString(utwalk_pid_roll);
+	ret.pb(h);
 
 	h = "utwalk_toe_const_offset\t";
 	h += toString(utwalk_toe_const_offset);
@@ -233,15 +232,21 @@ void GenerateParamFile(const double *params, int i, int j, const string PATH =
 	h += toString(utwalk_ankle_phase_offset);
 	ret.pb(h);
 
-//	h = "utwalk_pid_com_x\t";
-//	h += toString(utwalk_pid_com_x);
-//	ret.pb(h);
-//	h = "utwalk_pid_com_y\t";
-//	h += toString(utwalk_pid_com_y);
-//	ret.pb(h);
-//	h = "utwalk_pid_com_z\t";
-//	h += toString(utwalk_pid_com_z);
-//	ret.pb(h);
+	h = "utwalk_pid_com_x\t";
+	h += toString(utwalk_pid_com_x);
+	ret.pb(h);
+	h = "utwalk_pid_com_y\t";
+	h += toString(utwalk_pid_com_y);
+	ret.pb(h);
+	h = "utwalk_pid_com_z\t";
+	h += toString(utwalk_pid_com_z);
+	ret.pb(h);
+	h = "utwalk_pid_arm_x\t";
+	h += toString(utwalk_pid_com_x);
+	ret.pb(h);
+	h = "utwalk_pid_arm_y\t";
+	h += toString(utwalk_pid_com_y);
+	ret.pb(h);
 	ifstream f;
 	f.open("allo4.txt");
 	string s;
@@ -320,7 +325,7 @@ public:
 
 		vector<double> anss;
 		ifstream ifs;
-		for (int j = 0; j < 8; j++)
+		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 20; i++) {
 				double x;
 				string path = "outputrc" + toString(j) + "_" + toString(i)
@@ -332,6 +337,8 @@ public:
 				ifs.close();
 				anss.pb(-1 * x);
 			}
+
+		}
 
 		for (int r = 0; r < candidates.cols(); r++) {
 			_solutions.get_candidate(r).set_x(candidates.col(r));
@@ -447,11 +454,13 @@ int main(int argc, char *argv[]) {
 	x0[20] = -0.023659361728239663;
 	x0[21] = 0.08590805524680685;
 	x0[22] = -0.11237480724789313;
-//	x0[17] = 0.15;
-//	x0[18] = 0.2;
-//	x0[19] = 1.0;
-//	x0[20] = 1.0;
-//	x0[21] = 0.0;
+	x0[23] = 0.15;
+	x0[24] = 0.2;
+	x0[25] = 1.0;
+	x0[26] = 1.0;
+	x0[27] = 0.0;
+	x0[28] = 0.0;
+	x0[29] = 0.0;
 //	double sigma = 0.15;
 //	sigmas[3] = 3.0;
 //	sigmas[14] = 3.0;
@@ -527,6 +536,21 @@ int main(int argc, char *argv[]) {
 	ubounds[21] = 0.2;
 	lbounds[22] = -0.2;
 	ubounds[22] = 0.2;
+
+	lbounds[23] = 0;
+	ubounds[23] = 0.3;
+	lbounds[24] = 0;
+	ubounds[24] = 0.7;
+	lbounds[25] = 0;
+	ubounds[25] = 1.5;
+	lbounds[26] = 0;
+	ubounds[26] = 1.5;
+	lbounds[27] = 0;
+	ubounds[27] = 1.5;
+	lbounds[28] = 0;
+	ubounds[28] = 1.5;
+	lbounds[29] = 0;
+	ubounds[29] = 1.5;
 
 	/* SINGLE ITERATION TEST
 	 * //	CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(getFitness,cmaparams, select_time);
