@@ -78,6 +78,8 @@ class OptimizationBehaviorWalkForward: public NaoBehavior {
 	bool costSet[4];
 	bool x;
 	VecPosition ends[30];
+	bool turned;
+	double angle;
 	double endsAngles[30];
 	bool targetSet[30];
 	bool standing;
