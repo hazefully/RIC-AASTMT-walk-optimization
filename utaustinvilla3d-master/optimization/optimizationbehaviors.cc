@@ -210,8 +210,9 @@ OptimizationBehaviorWalkForward::OptimizationBehaviorWalkForward(
 		const string& outputFile_) :
 		NaoBehavior(teamName, uNum, namedParams_, rsg_), outputFile(outputFile_) {
 	INIT_WAIT = 1;
+	angle = 0;
 	run = 0;
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 30; i++)
 		DIS[i] = 0.0, startSet[i] = false;
 	sumOfWeights = sumOfWeightsOverDistance = 0;
 	expectedPerTarget = 5.0;
@@ -264,23 +265,24 @@ void OptimizationBehaviorWalkForward::init() {
 		startSet[i] = false;
 		targetSet[i] = false;
 		orientation[i] = 720;
+		startt[i] = VecPosition(-2, 0, 0);
 
 	}
 	for (int i = 0; i < 4; i++)
 		costSet[i] = false;
 //	moveTypes[0] = 3;
 
-	times[0] = 10.0;
+	times[0] = 15.0;
 	moveTypes[0] = 0;
-	times[1] = 11.0;
+	times[1] = 16.0;
 	moveTypes[1] = 5;
-	times[2] = 19.0;
+	times[2] = 22.0;
 	moveTypes[2] = 0;
-	times[3] = 20.0;
+	times[3] = 23.0;
 	moveTypes[3] = 5;
-	times[4] = 22.0;
+	times[4] = 27.0;
 	moveTypes[4] = 0;
-	times[5] = 23.0;
+	times[5] = 28.0;
 	moveTypes[5] = 5;
 	times[6] = 30.0;
 	moveTypes[6] = 4;
@@ -329,8 +331,9 @@ void OptimizationBehaviorWalkForward::init() {
 	moveTypes[25] = 0;
 	times[26] = 142.0;
 	moveTypes[26] = 0;
-	times[27] = 150.0;
-	moveTypes[27] = 6;
+	times[27] = 155.0;
+	moveTypes[27] = 3;
+
 	times[28] = 154.0;
 	moveTypes[28] = 0;
 	times[29] = 160.0;
@@ -338,7 +341,9 @@ void OptimizationBehaviorWalkForward::init() {
 
 	flipTime = 0;
 	standing = false;
+	angle = 0;
 	startCalc = false;
+	turned = false;
 
 	randomTarget = VecPosition(HALF_FIELD_X, HALF_FIELD_Y, 0);
 	targetStartTime = startTime + INIT_WAIT;
@@ -528,27 +533,24 @@ double OptimizationBehaviorWalkForward::fitnessDiagonal(VecPosition start) {
 double OptimizationBehaviorWalkForward::fitnessTurn(double startAngle,
 		VecPosition start, int dir) {
 	double ang = worldModel->getMyAngDegGroundTruth();
+//	cout<<ang<<endl;
 	if (ang < 0)
 		ang += 360;
 	if (startAngle < 0)
 		startAngle += 360;
-	double diff = fabs(ang - startAngle);
-	if (dir == 0) {
-		if (fabs(diff - 180) <= 3)
-			return -1;
-		if (fabs(ang - startAngle) >= 200.0)
-			return 0.1;
-		else
-			return 0;
-	} else {
-		if (fabs(diff - 220) <= 3)
-			return -1;
-		if (fabs(ang - startAngle) <= 160.0)
-			return 0.1;
-		else
-			return 0;
-	}
 
+	double diff = 0;
+
+	if ((ang <= 180 && startAngle <= 180) || (ang > 180 && startAngle > 180))
+		diff = fabs(ang - startAngle);
+	else
+		diff = fabs(min(ang, startAngle) + 365 - max(ang, startAngle));
+
+	if (fabs(diff - 180) < 5.0 && !worldModel->isFallen() && !hasFallen)
+		return -0.3;
+
+
+	return 0;
 }
 SkillType OptimizationBehaviorWalkForward::weave(double moveStartTime,
 		double timePerWeave) {
@@ -593,9 +595,8 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 	double currentTime = worldModel->getTime();
 	currentTime -= startTime;
 	VecPosition me = worldModel->getMyPositionGroundTruth();
-//	return turnCW();
-	if (currentTime <= 10.0) {
-		times[0] = 10.0;
+	if (currentTime <= 15.0) {
+		times[0] = 15.0;
 		moveTypes[0] = 0;
 		if (!targetSet[0]) {
 			targets[0] = VecPosition(me.getX() + 20, me.getY(), me.getZ());
@@ -603,12 +604,13 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 			orientation[0] = 0;
 		}
 		return walkFront(1.0);
-	} else if (currentTime <= 11.0) {
-		times[1] = 11.0;
+
+	} else if (currentTime <= 16.0) {
+		times[1] = 16.0;
 		moveTypes[1] = 5;
 		return SKILL_STAND;
-	} else if (currentTime <= 19.0) {
-		times[2] = 19.0;
+	} else if (currentTime <= 22.0) {
+		times[2] = 22.0;
 		moveTypes[2] = 0;
 		if (!targetSet[2]) {
 			targets[2] = VecPosition(me.getX() - 20, me.getY(), me.getZ());
@@ -616,12 +618,12 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 			orientation[2] = 175;
 		}
 		return walkBackwardsTurn(1.0);
-	} else if (currentTime <= 20.0) {
-		times[3] = 20.0;
+	} else if (currentTime <= 23.0) {
+		times[3] = 23.0;
 		moveTypes[3] = 5;
 		return SKILL_STAND;
-	} else if (currentTime <= 22.0) {
-		times[4] = 22.0;
+	} else if (currentTime <= 27.0) {
+		times[4] = 27.0;
 		moveTypes[4] = 0;
 		if (!targetSet[4]) {
 			targets[4] = VecPosition(me.getX() + 20, me.getY(), me.getZ());
@@ -629,8 +631,8 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 			orientation[4] = 175;
 		}
 		return walkBackwards();
-	} else if (currentTime <= 23.0) {
-		times[5] = 23.0;
+	} else if (currentTime <= 28.0) {
+		times[5] = 28.0;
 		moveTypes[5] = 5;
 		return SKILL_STAND;
 	} else if (currentTime <= 30.0) {
@@ -764,19 +766,20 @@ SkillType OptimizationBehaviorWalkForward::performMoves() {
 		times[26] = 142.0;
 		moveTypes[26] = 0;
 		return randomMove(132.0, 4.0);
-	} else if (currentTime <= 150.0) {
-		times[27] = 150.0;
-		moveTypes[27] = 6;
-		return turnCCW();
-	} else if (currentTime <= 154.0) {
-		times[28] = 154.0;
-		moveTypes[28] = 5;
-		return walkFront(1.0);
-	} else if (currentTime <= 160.0) {
-		times[29] = 160.0;
-		moveTypes[29] = 3;
+	} else if (currentTime <= 155.0) {
+		times[27] = 155.0;
+		moveTypes[27] = 3;
 		return turnCW();
 	}
+	//else if (currentTime <= 154.0) {
+	//	times[28] = 154.0;
+	//	moveTypes[28] = 5;
+	//	return walkFront(1.0);
+	//} else if (currentTime <= 160.0) {
+	//	times[29] = 160.0;
+	//	moveTypes[29] = 3;
+	//	return turnCW();
+	//}
 
 	return SKILL_STAND;
 }
@@ -904,7 +907,6 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 			setMonMessage(msg);
 		}
 	}
-	double angle = 0;
 	VecPosition me = worldModel->getMyPositionGroundTruth();
 	if (worldModel->isFallen() && !hasFallen) {
 		hasFallen = true;
@@ -945,20 +947,21 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 //			break;
 //		}
 //	}
-	if (currentTime - targetStartTime > 160.0) {
+	if (currentTime - targetStartTime > 155.0) {
 //		cout<<falls<<endl;
-//		for(int phase  = 0; phase < 30; phase++)
-//			cout<<moveTypes[phase]<<" "<<phase<<" "<<DIS[phase]<<endl;
+	//	for (int phase = 0; phase < 28; phase++)
+		//	cout << moveTypes[phase] << " " << phase << " " << DIS[phase]
+			//		<< endl;
 //		cout << costs[0] << " " << costs[1] << " " << costs[2] << " "<<costs[3]<< endl;
 		double fit = 0;
 		fit += (falls * COST_OF_FALL * -1);
 		bool x = false;
-		for (int phase = 0; phase < 30; phase++) {
+		for (int phase = 0; phase < 28; phase++) {
 
 			if (moveTypes[phase] == 5) {
 //					cout<<5<<" "<<(DIS[phase] > 0)* -3<<endl;
 //				cout << (DIS[phase] > 0) * -3 << endl;
-				fit += (DIS[phase] > 0) * -3;
+				fit += (DIS[phase] > 0) * -5;
 			} else if (moveTypes[phase] != 3 && moveTypes[phase] != 6) {
 				if (endsAngles[phase] < 0)
 					endsAngles[phase] *= -1;
@@ -975,8 +978,8 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 					} else if (orientation[phase] < 700
 							&& fabs(endsAngles[phase] - orientation[phase])
 									> 15.0) {
-//						cout << phase << " " << endsAngles[phase] << " "
-//								<< orientation[phase] << " " << -12 << endl;
+						cout << phase << " " << endsAngles[phase] << " "
+								<< orientation[phase] << " " << -12 << endl;
 						fit -= 12;
 					} else {
 //						cout << phase << " " << DIS[phase] << endl;
@@ -1001,18 +1004,11 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 		cout << "Run " << run << " : distance walked " << fit << endl;
 		init();
 	}
-	int phase = 0;
-	if (!startSet[phase]) {
-		startt[phase] = me;
-		angle = worldModel->getMyAngDegGroundTruth();
-		startSet[phase] = 1;
-		startCalc = false;
-	}
 //	DIS[phase] += fitnessTurn(angle, startt[phase], 0);
 //	ends[phase] = me;
 //	endsAngles[phase] = worldModel->getMyAngDegGroundTruth();
 //	cout << "fit " << DIS[phase] << endl;
-	for (int phase = 0; phase < 30; phase++) {
+	for (int phase = 0; phase < 28; phase++) {
 
 		if (currentTime - startTime <= times[phase]) {
 
@@ -1038,7 +1034,11 @@ void OptimizationBehaviorWalkForward::updateFitness() {
 			} else if (moveTypes[phase] == 5)
 				DIS[phase] += fitnessStop(startt[phase]);
 			ends[phase] = me;
-			endsAngles[phase] = worldModel->getMyAngDegGroundTruth();
+			if((phase == 0 && currentTime - startTime - INIT_WAIT <= 1.9) || (phase != 0 && currentTime - startTime - times[phase-1] <= 1.9))
+				{
+					endsAngles[phase] = worldModel->getMyAngDegGroundTruth();
+//					cout<<((phase == 0)? currentTime - startTime - INIT_WAIT : currentTime - startTime - times[phase-1])<<" angle: "<<endsAngles[phase]<<endl;
+				}
 			break;
 		}
 	}
@@ -1118,7 +1118,7 @@ void OptimizationBehaviorWalkForward::beam(double& beamX, double& beamY,
 
 		beamX = -2;
 		beamY = 0;
-		beamAngle = 0;
+		beamAngle = 45;
 	}
 }
 
@@ -1288,4 +1288,3 @@ bool OptimizationBehaviorStand::checkBeam() {
 	beamChecked = true;
 	return true;
 }
-
