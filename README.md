@@ -1,4 +1,3 @@
-#RIC-AASTMT
 
 RIC-AASTMT walk optimization code.
 
